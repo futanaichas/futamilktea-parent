@@ -1,0 +1,33 @@
+spring:
+  application:
+    name: gateway
+  cloud:
+    gateway:
+      routes:
+      - id: account-service
+        uri: lb://account #loadBalance  Ribbin 负载均衡   列表：多台商品微服务的地址  默认随机一台 访问 连接不上 断器没有超时 Feign
+        predicates:
+        - Path=/account/**  #  增加前缀  /account/xxx/xxx
+        filters:
+        - StripPrefix= 1  #  增加前缀
+        - name: RequestRateLimiter
+          args:
+            key-resolver: "#{@ipKeyResolver}"  # 根据IP限流 就是在GatewayApplication中写的方法
+            redis-rate-limiter.replenishRate: 1  #同一个IP在一秒中只能访问一次
+            redis-rate-limiter.burstCapacity: 1  #在突发情况下 一个IP在一秒中只能访问一次
+     # - id: account-service
+     #   uri: lb://account
+     #   predicates:
+     #   - Path=/account/**  #    /account/haha/**
+     #   filters:
+     #   - StripPrefix= 1  #删除前缀
+  redis:
+    host: 192.168.200.128
+server:
+  port: 9101
+eureka:
+  client:
+    service-url:
+      defaultZone: http://127.0.0.1:6868/eureka
+  instance:
+    prefer-ip-address: true
